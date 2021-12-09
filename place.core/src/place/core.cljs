@@ -11,47 +11,60 @@
 (def places
   [{:key    :millions
     :text   "million"
+    :zero   "millions"
     :times  1}
-   {:key    :hundred-thousand
+   {:key    :hundred-thousands
     :text   "thousand"
+    :zero   "hundred thousands"
     :times  100}
-   {:key    :ten-thousand
+   {:key    :ten-thousands
     :text   "thousand"
+    :zero   "ten thousands"
     :times  10}
-   {:key    :thousand
+   {:key    :thousands
     :text   "thousand"
+    :zero   "thousands"
     :times  1}
-   {:key    :hundred
+   {:key    :hundreds
     :text   ""
+    :zero   "hundreds"
     :times  100}
    {:key    :tens
     :text   ""
+    :zero   "tens"
     :times  10}
    {:key    :ones
     :text   ""
+    :zero   "ones"
     :times  1}
    {:key    :tenths
     :text   "tenth"
+    :zero   "tenths"
     :pluralize true
     :times  1}
-   {:key    :hundredth
+   {:key    :hundredths
     :text   "hundredth"
+    :zero   "hundredths"
     :pluralize true
     :times  1}
-   {:key    :thousandth
+   {:key    :thousandths
     :text   "thousandth"
+    :zero   "thousandths"
     :pluralize true
     :times  1}
-   {:key    :ten-thousandth
+   {:key    :ten-thousandths
     :text   "ten thousandth"
+    :zero   "ten thousandths"
     :pluralize true
     :times  1}
-   {:key    :hundred-thousandth
+   {:key    :hundred-thousandths
     :text   "hundred thousandth"
+    :zero   "hundred thousandths"
     :pluralize true
     :times  1}
-   {:key    :millionth
+   {:key    :millionths
     :text   "millionth"
+    :zero   "millionths"
     :pluralize true
     :times  1}])
 
@@ -133,9 +146,11 @@
            :on-click (partial click-choice place-index)} 
       (cljs.pprint/cl-format nil "~R ~a~a"
                              (* digit (:times place))
-                             (:text place)
+                             (if (= 0 digit)
+                               (:zero place)
+                               (:text place))
                              (if (and (:pluralize place)
-                                      (not (= digit 1)))
+                                      (> digit 1))
                                "s" ""))]]))
 
 (defn render-problem []
