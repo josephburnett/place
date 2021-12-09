@@ -95,14 +95,15 @@
 
 (defn click-choice [index]
   (swap! app-state (fn [state]
-                     (let [is-correct (= (get-in state [:problem :index]) index)]
+                     (let [is-correct (= (get-in state [:problem :index]) index)
+                           score (update-score (:score state) is-correct)]
                        (-> state
                            (#(if is-correct (assoc-in % [:problem] (new-problem)) %))
                            (assoc-in [:text] (if is-correct
-                                               "Correct! +3"
-                                               "Incorrect! -1"))
+                                               (cljs.pprint/cl-format nil "Correct! +3. Your score is ~a." score)
+                                               (cljs.pprint/cl-format nil "Incorrect! -1. Your score is ~a." score)))
                            (assoc-in [:click] index)
-                           (assoc-in [:score] (update-score (:score state) is-correct)))))))
+                           (assoc-in [:score] score))))))
 
 (defn get-app-element []
   (gdom/getElement "app"))
@@ -127,15 +128,14 @@
   (let [place (get places place-index)
         suffix (:text place)]
     [:div
-     [:a {:style {:font-size "50px"
-                  :color "blue"}
-          :on-click (partial click-choice place-index)} 
+     [:h1 {:style {:color "blue"}
+           :on-click (partial click-choice place-index)} 
       (cljs.pprint/cl-format nil "~R ~a~a"
-                                 (* digit (:times place))
-                                 (:text place)
-                                 (if (and (:pluralize place)
-                                          (> digit 1))
-                                   "s" ""))]]))
+                             (* digit (:times place))
+                             (:text place)
+                             (if (and (:pluralize place)
+                                      (> digit 1))
+                               "s" ""))]]))
 
 (defn render-problem []
   (let [state @app-state
@@ -143,7 +143,6 @@
         digit (js/parseInt (nth (:number problem) (:index problem)))]
     [:div
      [:h1 (:text state)]
-     [:h1 "score: " (:score state)]
      [:div
       [render-number state]
       (for [n (:choices problem)]
