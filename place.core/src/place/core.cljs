@@ -1,5 +1,6 @@
 (ns ^:figwheel-hooks place.core
   (:require
+   [cljs.pprint]
    [goog.dom :as gdom]
    [reagent.core :as reagent :refer [atom]]
    [reagent.dom :as rdom]))
