@@ -134,7 +134,7 @@
                              (* digit (:times place))
                              (:text place)
                              (if (and (:pluralize place)
-                                      (> digit 1))
+                                      (not (= digit 1)))
                                "s" ""))]]))
 
 (defn render-problem []
