@@ -116,7 +116,7 @@
                            (assoc-in [:text] (if is-correct
                                                (cljs.pprint/cl-format nil "Correct! +3. Your score is ~a." score)
                                                (cljs.pprint/cl-format nil "Incorrect! -1. Your score is ~a." score)))
-                           (assoc-in [:click] index)
+                           (#(if is-correct (dissoc % :click) (assoc-in % [:click] index)))
                            (assoc-in [:score] score))))))
 
 (defn get-app-element []
@@ -138,11 +138,11 @@
      (for [i (range 0 (count fractions))]
        [render-digit (nth fractions i) (= (:index problem) (+ (count integers) i))])]))
 
-(defn render-digit-words [digit place-index]
+(defn render-digit-words [digit place-index click]
   (let [place (get places place-index)
         suffix (:text place)]
     [:div
-     [:h1 {:style {:color "blue"}
+     [:h1 {:style {:color (if (= click place-index) "grey" "blue")}
            :on-click (partial click-choice place-index)} 
       (cljs.pprint/cl-format nil "~R ~a~a"
                              (* digit (:times place))
@@ -156,13 +156,14 @@
 (defn render-problem []
   (let [state @app-state
         problem (:problem state)
-        digit (js/parseInt (nth (:number problem) (:index problem)))]
+        digit (js/parseInt (nth (:number problem) (:index problem)))
+        click (:click state)]
     [:div
      [:h1 (:text state)]
      [:div
       [render-number state]
       (for [n (:choices problem)]
-        [render-digit-words digit n])]]))
+        [render-digit-words digit n click])]]))
 
 (defn mount [el]
   (rdom/render [render-problem] el))
