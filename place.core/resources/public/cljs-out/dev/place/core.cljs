@@ -78,37 +78,58 @@
     (if (< (count indexes) 1) (new-problem)
         (let [correct-index (js/parseInt (nth indexes (rand-int (count indexes))))
               problem-indexes (choose-indexes correct-index)]
-          {:text instructions
-           :number number
+          {:number number
            :index correct-index
            :choices problem-indexes}))))
 
-(defonce app-state (atom (new-problem)))
+(defn update-score [score is-correct]
+  (if is-correct
+    (+ 3 score)
+    (max 0 (- score 1))))
+
+
+(defonce app-state (atom {:text instructions
+                          :problem (new-problem)
+                          :score 0}))
+
+
+(defn click-choice [index]
+  (swap! app-state (fn [state]
+                     (let [is-correct (= (get-in state [:problem :index]) index)]
+                       (-> state
+                           (#(if is-correct (assoc-in % [:problem] (new-problem)) %))
+                           (assoc-in [:text] (if is-correct
+                                               "Correct! +3"
+                                               "Incorrect! -1"))
+                           (assoc-in [:click] index)
+                           (assoc-in [:score] (update-score (:score state) is-correct)))))))
 
 (defn get-app-element []
   (gdom/getElement "app"))
 
-(defn render-digit [digit is-target]
-  [:span {:style {:font-size "60px"
-                  :color (if is-target "red" "black")}} digit " "])
+(defn render-digit [digit is-target index]
+  ^{:key index} [:span {:style {:font-size "60px"
+                                :color (if is-target "red" "black")}} digit " "])
 
 (defn render-number [state]
-  (let [integers (take 7 (:number state))
-        fractions (drop 7 (:number state))]
+  (let [problem (:problem state)
+        integers (take 7 (:number problem))
+        fractions (drop 7 (:number problem))]
     [:div
-     (for [i (range 0 (count integers))]
-       [render-digit (nth integers i) (= (:index state) i)])
+          (for [i (range 0 (count integers))]
+            [render-digit (nth integers i) (= (:index problem) i)])
      [:span {:style {:font-size "60px"
                      :color "black"}} ". "]
      (for [i (range 0 (count fractions))]
-       [render-digit (nth fractions i) (= (:index state) (+ (count integers) i))])]))
+       [render-digit (nth fractions i) (= (:index problem) (+ (count integers) i))])]))
 
 (defn render-digit-words [digit place-index]
   (let [place (get places place-index)
         suffix (:text place)]
     [:div
-     [:span {:style {:font-size "50px"
-                     :color "blue"}}
+     [:a {:style {:font-size "50px"
+                  :color "blue"}
+          :on-click (partial click-choice place-index)} 
       (cljs.pprint/cl-format nil "~R ~a~a"
                                  (* digit (:times place))
                                  (:text place)
@@ -116,17 +137,20 @@
                                           (> digit 1))
                                    "s" ""))]]))
 
-(defn render-problem [state]
-  (let [digit (js/parseInt (nth (:number state) (:index state)))]
+(defn render-problem []
+  (let [state @app-state
+        problem (:problem state)
+        digit (js/parseInt (nth (:number problem) (:index problem)))]
     [:div
      [:h1 (:text state)]
+     [:h1 "score: " (:score state)]
      [:div
       [render-number state]
-      (for [n (:choices state)]
+      (for [n (:choices problem)]
         [render-digit-words digit n])]]))
 
 (defn mount [el]
-  (rdom/render [render-problem @app-state] el))
+  (rdom/render [render-problem] el))
 
 (defn mount-app-element []
   (when-let [el (get-app-element)]
