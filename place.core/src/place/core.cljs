@@ -66,7 +66,8 @@
 
 (defn choose-indexes [correct-index]
   (let [incorrect-indexes (for [i (range 0 (count places))
-                                :when #(not (= correct-index %))] i)]
+                                :when (not= correct-index i)] i)]
+    (print incorrect-indexes)
     (->> (shuffle incorrect-indexes)
          (take 4)
          (cons correct-index)
